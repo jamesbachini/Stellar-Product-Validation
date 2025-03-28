@@ -11,7 +11,7 @@ impl MultiUserIncrementContract {
     }
 
     pub fn increment(env: Env, caller: Address) -> u32 {
-        //caller.require_auth();
+        caller.require_auth();
         let key = Self::counter_key(&caller);
         let mut count: u32 = env.storage().instance().get(&key).unwrap_or(0);
         log!(&env, "User: {}, count: {}", caller, count);
