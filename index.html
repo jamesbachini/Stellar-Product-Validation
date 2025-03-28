@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IdeaValidator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Tahoma, Verdana, sans-serif;
+    }
+
+    body {
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(0deg, #735ded, #266697);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 0;
+    }
+
+    #cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: #10b981;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 1rem;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+
+    #cta-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin: 4rem 0;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    #secret-read {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      padding: 0.5rem 1rem;
+      background: #aaa;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .hero {
+        padding: 2rem 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>IdeaValidator</h1>
+    <p>Test your business concept before you build it</p>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h2>Is Your Business Idea Worth Pursuing?</h2>
+      <p>Get early validation and avoid wasting time on ideas that don't resonate</p>
+      <div id="cta-button">Click Here</div>
+    </section>
+
+    <section class="features">
+      <div class="feature-card">
+        <h3>Problem Validation</h3>
+        <p>Verify if the problem you're solving is significant enough</p>
+      </div>
+      <div class="feature-card">
+        <h3>Solution Testing</h3>
+        <p>Check if your proposed solution resonates with potential customers</p>
+      </div>
+      <div class="feature-card">
+        <h3>Market Research</h3>
+        <p>Understand your target market and competition</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/13.1.0/stellar-sdk.js"></script>
+  <script>
+    const PUBLIC_KEY = "";
+    const SECRET_KEY = "";
+    const CONTRACT_ID = "CCKVWLTUTB7DAWYAZXJFNZPU6UGHVWQXKAARSUEUCUEKZ7XWJ4XT7MTL";
+
+    const rpc = new StellarSdk.rpc.Server('https://soroban-testnet.stellar.org');
+    const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const networkPassphrase = StellarSdk.Networks.TESTNET;
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(SECRET_KEY);
+    const scValAddress = StellarSdk.nativeToScVal(PUBLIC_KEY, { type: "address" });
+        
+    async function callIncrement() {
+        const sourceAccount = await rpc.getAccount(PUBLIC_KEY);
+        
+        try {
+            const tx = new StellarSdk.TransactionBuilder(sourceAccount, {
+            fee: StellarSdk.BASE_FEE,
+            networkPassphrase: StellarSdk.Networks.TESTNET,
+            }).addOperation(contract.call("increment", scValAddress)).setTimeout(30).build();
+            const preparedTx = await rpc.prepareTransaction(tx);
+            preparedTx.sign(sourceKeypair);
+            const txResult = await rpc.sendTransaction(preparedTx);
+            console.log('txResult', txResult);
+        } catch (error) {
+            console.error("Error calling increment:", error);
+            alert("Error calling increment. See console for details.");
+        }
+        thankYou();
+    }
+
+    const thankYou = async () => {
+        alert('Thank you for your interest. Product is currently in development. Check back soon.')
+    }
+
+    async function callRead() {
+      const sourceAccount = await rpc.getAccount(PUBLIC_KEY);
+      const tx = new StellarSdk.TransactionBuilder(sourceAccount, {
+          fee: StellarSdk.BASE_FEE,
+          networkPassphrase: StellarSdk.Networks.TESTNET,
+        })
+        .addOperation(contract.call("read", scValAddress))
+        .setTimeout(30)
+        .build();
+      rpc.simulateTransaction(tx).then((sim) => {
+        const decoded = StellarSdk.scValToNative(sim.result?.retval);
+        alert(`Clicks: ${decoded}`);
+      });
+    }
+
+    document.getElementById('cta-button').addEventListener('click', function(e) {
+      e.preventDefault();
+      callIncrement();
+    });
+    const secretButton = document.createElement("button");
+    secretButton.id = "secret-read";
+    secretButton.innerText = "?";
+    secretButton.addEventListener("click", function() {
+      callRead();
+    });
+    document.body.appendChild(secretButton);
+  </script>
+</body>
+</html>

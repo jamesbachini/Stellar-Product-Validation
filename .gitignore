@@ -1,3 +1,7 @@
+contract/target
+contract/Cargo.lock
+contract/.stellar
+
 # Logs
 logs
 *.log
